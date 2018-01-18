@@ -3,8 +3,7 @@
 // Pour déboguer du code durant le chargement d'une page dans cordova-simulate ou sur les appareils/émulateurs Android, lancez votre application, définissez des points d'arrêt, 
 // puis exécutez "window.location.reload()" dans la console JavaScript.
 var db= window.openDatabase("Movies", "1.0", "base de films, acteurs, et compagnies", 500000);
-var listePop = {};
-var listeFilm = {};
+var listePop = [], listeActeur = [];
 (function () {
     "use strict";
 
@@ -17,37 +16,75 @@ var listeFilm = {};
         document.addEventListener( 'resume', onResume.bind( this ), false );
         db.transaction(creerTableFilms, onError, onSuccess);
         db.transaction(creerTableActeurs, onError, onSuccess);
-        db.transaction(chargePop, onError, onSuccess);
+        chargePop();
+        //db.transaction(save2Db, onError, onSuccess);
+        save2Db();
+        console.log("lecture taille avant timer:"+listePop.length);
+        setInterval(function () {
+            console.log("lecture taille hors ajax:" + listePop.length);
+        }, 5000);
     };
     function chargePop() {
-        for (var i = 1; i < 5; i++) {
 
-            $.ajax({
-                url: "https://api.themoviedb.org/3/movie/popular?api_key=85a1114cc9bcee8c748abdaaade8169a&language=en-US&page="+i,
-                cache: false,
-                type: "GET",
-                dataType: "json",
-                success: function (data) {
-                    for (var i = 0; i < data['results'].length; i++) {
-                        insertFilm(data['results'][i]);
-                    }
-                    //displayFilms();
+
+            //test xhr
+            var data = "{}";
+
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            xhr.addEventListener("readystatechange", function (result) {
+                if (this.readyState === this.DONE) {
+                    console.log("this.response xml=", this.responseXML);
+                    
                 }
             });
 
-            $.ajax({
-                url: "https://api.themoviedb.org/3/person/popular?api_key=85a1114cc9bcee8c748abdaaade8169a&language=en-US&page=" + i,
-                cache: false,
-                type: "GET",
-                dataType: "json",
-                success: function (data) {
-                    for (var i = 0; i < data['results'].length; i++) {
-                        insertActor(data['results'][i]);
-                    }
-                    //displayFilms();
-                }
-            });
-        }
+            xhr.open("GET", "https://api.themoviedb.org/3/movie/popular?page=1&language=en-US&api_key=85a1114cc9bcee8c748abdaaade8169a");
+
+            xhr.send(data);
+            var test = xhr.responseXML;
+            console.log("le first child= ",test);
+            //$.ajax({
+            //    url: "https://api.themoviedb.org/3/movie/popular?api_key=85a1114cc9bcee8c748abdaaade8169a&language=en-US&page="+i,
+            //    cache: false,
+            //    type: "GET",
+            //    dataType: "json",
+            //    success: function (data) {  
+            //        console.log("les data:", data.results);
+                  
+            //        //console.log("data recu",data);
+            //        for (var i = 0; i < data.count; i++) {                        
+            //            listePop.push(data.results[i]);                        
+            //        }
+            //    },
+            //    complete: function (data) {
+            //        ////console.log("data recu", data);
+            //        //for (var i = 0; i < data.count; i++) {
+            //        //    listePop.push(data['results'][i]);
+            //        //};
+            //        //console.log("longueur complete: " + listePop.length);
+            //        //console.log("complete liste 0: "+listePop[0]);
+            //    }
+            //});
+
+            //$.ajax({
+            //    url: "https://api.themoviedb.org/3/person/popular?api_key=85a1114cc9bcee8c748abdaaade8169a&language=en-US&page=" + i,
+            //    cache: false,
+            //    type: "GET",
+            //    dataType: "json",
+            //    success: function (data) {
+            //        for (var i = 0; i < data['results'].length; i++) {
+            //            listeActeur.push(data.results[i]);
+            //        }
+            //    }
+            //});
+
+ 
+    
+        console.log("la liste film contient: "+listePop.length , listePop);
+        console.log("la liste acteurs contient: ", listeActeur);
+        
     };
     function onPause() {
         // TODO: cette application a été suspendue. Enregistrez l'état de l'application ici.
@@ -66,7 +103,7 @@ function onError(tx) {
 function creerTableActeurs(tx) {
     tx.executeSql('DROP TABLE IF EXISTS actors');
     tx.executeSql('CREATE TABLE IF NOT EXISTS actors(idActor unique ,name ,gender ,birth_date,birth_place ,death_day,popularity ,bio)');
-    tx.executeSql('INSERT INTO actors(idActor ,name, gender, birth_date, birth_place,death_day, popularity, bio) VALUES (1542, "moi", 0, 101/02/25, "quelque part", 21542,11,01, 1.2542, "Lorem ipsum dolor ");');
+    tx.executeSql('INSERT INTO actors(idActor ,name, gender, birth_date, birth_place,death_day, popularity, bio) VALUES (1542, "moi", 0, 101/02/25, "quelque part", 21542/1/01, 1.2542, "Lorem ipsum dolor ");');
 
 }
 function creerTableFilms(tx) {
@@ -126,21 +163,36 @@ function insertActor(actor) {
 
     //});
 }
-
-function insertFilm(leFilm) {
-    db.transaction(function insert(tx) {
-    var adult;
-    if (leFilm['adult']) { adult = 1; } else adult = 0;
-    var video;
-    if (leFilm['video']) { video = 1 } else video = 0;
-    var sql = 'INSERT INTO films(idFilm,original_title,poster_path,adult,release_date,genre_ids,overview,title,backdrop_path,video) VALUES (?,?,?,?,?,?,?,?,?,?)';
-        tx.executeSql(sql, [leFilm['id'], leFilm['original_title'], leFilm['poster_path'], adult, leFilm['release_date'], leFilm['genre_ids'], leFilm['overview'], leFilm['title'], leFilm['backdrop_path'], video]);
-    }, function errorCB(tx, err) {
-        console.log("Error processing SQL: "+err , tx.message);
-    }, function successCB() {
-        //console.log("film "+leFilm['title']+" inserted successfully");
-        
+function getLength(arr) {
+    return Object.keys(arr).length;
+}
+function save2Db() {
+    console.log("les liste film pour verif long=",listePop);
+    console.log("liste acteur pour verif long=" + getLength(listeActeur), listeActeur);
+    var listeCount = 0;
+    listePop.forEach(function () {
+        listeCount=listeCount+1;
     });
+    for (var i = 0; i < listePop.length; i++) {
+        console.log("film -"+i+" titre:"+listePop[i]['title']);
+    }
+    console.log("le compteur renvoi: "+listeCount);
+    listePop.forEach(function (item) {
+        db.transaction(function insert(tx) {
+        var adult;
+        if (item['adult']) { adult = 1; } else adult = 0;
+        var video;
+        if (item['video']) { video = 1 } else video = 0;
+        var sql = 'INSERT INTO films(idFilm,original_title,poster_path,adult,release_date,genre_ids,overview,title,backdrop_path,video) VALUES (?,?,?,?,?,?,?,?,?,?)';
+        tx.executeSql(sql, [item['id'], item['original_title'], item['poster_path'], adult, item['release_date'], item['genre_ids'], item['overview'], item['title'], item['backdrop_path'], video]);
+        }, function errorCB(tx, err) {
+            console.log("Error processing SQL: "+err , tx.message);
+        }, function successCB() {
+            //console.log("film "+leFilm['title']+" inserted successfully");
+        
+        });
+
+    })
     }
     
 
