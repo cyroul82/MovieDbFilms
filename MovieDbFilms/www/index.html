@@ -18,12 +18,13 @@
 </head>
     <body>
 
-        <div>
-            
+        <div class="col-12 ">            
             <h1 class="jumbotron">Affichage des films</h1>
+            <input type="button" class="btn btn-dark col-3" id="triNom" value="Trier par nom" />
+            <input type="button" class="btn btn-dark col-3" id="triPop" value="Films populaire" />
         </div>
         <div id="film" class="col-12"></div>
-        <div id="xhr" class="col-sm-12"></div>
+        <div id="xhr" class="col-12"></div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="scripts/platformOverrides.js"></script>
         <script src="scripts/jquery-3.2.1.js"></script>

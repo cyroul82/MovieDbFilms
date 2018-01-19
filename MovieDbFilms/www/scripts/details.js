@@ -106,7 +106,8 @@ function stopVideo() {
         type: "GET",
         dataType: "json",
         success: function (data) {
-            $('#listFilm').append("<p class='panel'>" + data.original_title + "</p><img class='col-10' src='https://image.tmdb.org/t/p/w500" + data.poster_path + "' alt=" + data.original_title + " /><h2 > Synopsis : </br><span >" + data.overview + "</span></h2><p style='font-size:0.5em'> Sortie :  " + data.release_date + "</p>");
+
+            $('#listFilm').append("<p class='panel'>" + data.original_title + "</p><img class='col-10' src='https://image.tmdb.org/t/p/w500" + data.poster_path + "' alt=" + data.original_title + " /><h2 > Synopsis : </br><span >" + data.overview + "</span></h2><p > Sortie :  " + data.release_date + "</p>");
 
         }
     });
@@ -118,6 +119,7 @@ function stopVideo() {
         dataType: "json",
         success: function (data) {
             for (var i = 0; i < data.cast.length; i++) {
+
                 if (data.cast[i]['gender'] === 0) {
                     sex = "Non défini";
                 }
